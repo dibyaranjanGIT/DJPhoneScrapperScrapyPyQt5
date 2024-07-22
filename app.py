@@ -307,10 +307,12 @@ class ScrapingApp(QMainWindow):
         horizontal_spacer_top3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         second_buttons_layout.addItem(horizontal_spacer_top3)
 
-        self.na_button = QPushButton("NA")
-        self.na_button.setFixedSize(140, 40)
-        self.na_button.setStyleSheet(button_stylesheet)
-        second_buttons_layout.addWidget(self.na_button)
+        self.help_button = QPushButton("❓Help")
+        self.help_button.setFixedSize(140, 40)
+        self.help_button.setStyleSheet(button_stylesheet)
+        self.help_button.clicked.connect(self.show_help)
+        second_buttons_layout.addWidget(self.help_button)
+
 
         # Add a spacer to push buttons to the left
         second_buttons_layout.addStretch(1)
@@ -354,7 +356,7 @@ class ScrapingApp(QMainWindow):
 
         # Add a vertical spacer to increase space between progress bar and export buttons
         vertical_spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Fixed)
-        controls_layout.addItem(vertical_spacer) 
+        controls_layout.addItem(vertical_spacer)
 
         # Labels for counts
         label_container = QFrame()
@@ -364,22 +366,31 @@ class ScrapingApp(QMainWindow):
         # Create a layout for the container
         container_layout = QVBoxLayout(label_container)
 
-        def create_label(text):
+        def create_label(text, bg_color):
             label = QLabel(text)
-            label.setStyleSheet("QLabel { border: none; }")  # Ensure no border or other styles are applied to the labels
+            label.setFixedHeight(30) 
+            label.setFixedWidth(400)
+            label.setStyleSheet(f"""
+                    QLabel {{
+                        border: None;
+                        background-color: {bg_color};
+                        padding: 3px;
+                        border-radius: 15px;
+                    }}
+                """)
             return label
 
         # Create the labels
-        self.total_urls_processed_label = create_label("URLs Processed: 0")
+        self.total_urls_processed_label = create_label('<span style="color: #b79333; font-weight: bold">URLs Processed:</span> <span style="color: #717171;">0</span>', "#faefd3")
         container_layout.addWidget(self.total_urls_processed_label)
 
-        self.total_contact_found_label = create_label("Contact Numbers Found: 0")
+        self.total_contact_found_label = create_label('<span style="color: #64b641; font-weight: bold">Contact Numbers Found:</span> <span style="color: #717171;">0</span>', "#e2f0bd")
         container_layout.addWidget(self.total_contact_found_label)
 
-        self.total_contact_not_found_label = create_label("Contact Numbers Not Found: 0")
+        self.total_contact_not_found_label = create_label('<span style="color: #e75961; font-weight: bold">Contact Numbers Not Found:</span> <span style="color: #717171;">0</span>', "#f5bbc7") 
         container_layout.addWidget(self.total_contact_not_found_label)
 
-        self.success_rate_label = create_label("Contact Success Rate: 0%")
+        self.success_rate_label = create_label('<span style="color: #245dd6; font-weight: bold">Contact Success Rate:</span> <span style="color: #717171;">0%</span>', "#bcdaf6") 
         container_layout.addWidget(self.success_rate_label)
 
         # Add the container to the main layout
@@ -420,18 +431,34 @@ class ScrapingApp(QMainWindow):
         self.single_url_input = QLineEdit()
         self.single_url_input.setPlaceholderText("SINGLE DATA VIEW")
         self.single_url_input.setFixedSize(390, 30)
+        self.single_url_input.setStyleSheet("border: none;") 
         single_data_layout.addWidget(self.single_url_input)
         single_data_layout.setAlignment(Qt.AlignLeft)
+
+        vertical_line = QFrame()
+        vertical_line.setFrameShape(QFrame.VLine)
+        vertical_line.setFrameShadow(QFrame.Sunken)
+        vertical_line.setFixedHeight(self.single_url_input.height())  # Set fixed height to match button height
+        single_data_layout.addWidget(vertical_line)
 
         self.single_start_button = QPushButton()
         self.single_start_button.setFixedSize(50, 30)
         self.single_start_button.setStyleSheet(single_button_stylesheet)
-        self.single_start_button.setIcon(QIcon('phoneScrapper/start_icon.png'))  # Path to your PNG file
+        self.single_start_button.setIcon(QIcon('phoneScrapper/start_icon.png'))
         self.single_start_button.setIconSize(QSize(40, 20))
         self.single_start_button.clicked.connect(self.start_single_scraping)
         single_data_layout.addWidget(self.single_start_button)
 
-        controls_layout.addLayout(single_data_layout)
+        single_data_container = QWidget()
+        single_data_container.setLayout(single_data_layout)
+        single_data_container.setFixedSize(460, 50) 
+        single_data_container.setStyleSheet("""
+            border: 1px solid black;
+            border-radius: 25px;
+            padding: 5px; 
+        """)
+
+        controls_layout.addWidget(single_data_container)
 
         # Add a vertical spacer to increase space between top buttons and browse button
         vertical_spacer_top = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Fixed)
@@ -477,26 +504,36 @@ class ScrapingApp(QMainWindow):
         # Reduce space at the bottom
         controls_layout.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Fixed))
 
-        # Add logo and copyright text
+        # Add a container for logo and copyright text with background color
+        logo_container = QWidget()
+        logo_container.setStyleSheet("background-color: #eff1fd;")
+        logo_layout = QVBoxLayout(logo_container)
+
         logo_widget = QWidget()
-        logo_layout = QHBoxLayout(logo_widget)
+        logo_layout_inner = QHBoxLayout(logo_widget)
 
         self.logo_label = QLabel()
-        self.logo_label.setPixmap(QPixmap('phoneScrapper/Concentrix.png').scaled(30, 30, Qt.KeepAspectRatio))
+        self.logo_label.setPixmap(QPixmap('phoneScrapper/Concentrix.png').scaled(40, 40, Qt.KeepAspectRatio))
         self.logo_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        logo_layout.addWidget(self.logo_label)
+        logo_layout_inner.addWidget(self.logo_label)
+
+        # Add a fixed-width spacer widget between logo_label and copyright_label
+        spacer_widget = QWidget()
+        spacer_widget.setFixedWidth(8) 
+        logo_layout_inner.addWidget(spacer_widget)
 
         self.copyright_label = QLabel("@ Copyright Product by CR Consultancy Service PVT LTD.")
         self.copyright_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.copyright_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        logo_layout.addWidget(self.copyright_label)
+        logo_layout_inner.addWidget(self.copyright_label)
 
-        logo_layout.setContentsMargins(0, 0, 0, 0)
-        logo_layout.setSpacing(5)  # Adjust this value for slight gap
+        logo_layout_inner.setContentsMargins(0, 0, 0, 0)
+        logo_layout_inner.setSpacing(10)
 
-        logo_widget.setStyleSheet("background-color: #eff1fd;")
+        logo_widget.setLayout(logo_layout_inner)
+        logo_layout.addWidget(logo_widget)
 
-        controls_layout.addWidget(logo_widget)
+        controls_layout.addWidget(logo_container)
         
         # Create a wrapper widget to contain the control layout with the gradient
         controls_wrapper = QWidget()
@@ -508,7 +545,7 @@ class ScrapingApp(QMainWindow):
 
         # Set the stretch factors
         main_layout.setStretch(0, 8)
-        main_layout.setStretch(1, 2) 
+        main_layout.setStretch(1, 2)
         main_layout.addStretch()
 
         self.setCentralWidget(main_widget)
@@ -523,7 +560,7 @@ class ScrapingApp(QMainWindow):
         if file_path:
             self.file_path = file_path
             self.domain_count_label.setText(f"Total domains: {len(pd.read_excel(file_path, header=None)[0])}")
-            self.file_path_label.setText(file_path)  # Display the file path
+            self.file_path_label.setText(file_path)
 
     def start_scraping(self):
         if not self.file_path:
@@ -571,8 +608,8 @@ class ScrapingApp(QMainWindow):
         self.scraping_thread = ScrapingThread(self.domains, self.pause_event)
         self.scraping_thread.item_scraped.connect(self.item_scraped)
         self.scraping_thread.spider_closed.connect(self.spider_closed)
-        self.scraping_thread.url_processed.connect(self.update_counts)  # Connect the url_processed signal
-        self.start_time = time.time()  # Set the start time here
+        self.scraping_thread.url_processed.connect(self.update_counts) 
+        self.start_time = time.time() 
         self.scraping_thread.start()
         self.single_start_button.setEnabled(False)
 
@@ -617,7 +654,7 @@ class ScrapingApp(QMainWindow):
     def update_progress_bar(self):
         progress = (self.total_urls_processed / len(self.domains)) * 100 if self.domains else 0
         self.progress_bar.setValue(progress)
-        QApplication.processEvents()  # Ensure UI updates are processed
+        QApplication.processEvents()  
 
     def spider_closed(self):
         elapsed_time = time.time() - self.start_time
@@ -626,7 +663,7 @@ class ScrapingApp(QMainWindow):
         self.progress_bar.setValue(100)
         self.timer.stop()
         self.start_button.setEnabled(True)
-        self.single_start_button.setEnabled(True)  # Enable the single start button when done
+        self.single_start_button.setEnabled(True) 
 
     def clear_results(self):
         self.file_path = ""
@@ -643,10 +680,10 @@ class ScrapingApp(QMainWindow):
         self.success_rate_label.setText("Contact Success Rate: 0%")
         self.time_label.setText("Elapsed time: 0s")
         self.remaining_label.setText("Time remaining: Calculating...")
-        self.domain_count_label.setText("Total domains: 0")  # Reset the domain count label
-        self.file_path_label.setText("")  # Clear the file path label
+        self.domain_count_label.setText("Total domains: 0")  
+        self.file_path_label.setText("") 
         self.start_button.setEnabled(True)
-        self.single_start_button.setEnabled(True)  # Enable the single start button
+        self.single_start_button.setEnabled(True)
 
     def stop_scraping(self):
         if self.scraping_thread:
@@ -654,6 +691,37 @@ class ScrapingApp(QMainWindow):
 
     def pause_scraping(self):
         self.pause_event.set()
+
+    def show_help(self):
+        help_text = (
+            "<h2>Phone Number Scraper Help</h2>"
+            "<p>This application allows you to scrape phone numbers from a list of websites provided in an Excel file.</p>"
+            "<h3>How to Use:</h3>"
+            "<ol>"
+            "<li><b>Select Excel File:</b> Click the browse button to select an Excel file containing the list of domains you want to scrape.</li>"
+            "<li><b>Start Scraping:</b> Click the 'Start' button to begin scraping phone numbers from the domains.</li>"
+            "<li><b>Pause/Resume Scraping:</b> Use the 'Pause' button to pause the scraping process and the 'Resume' button to continue.</li>"
+            "<li><b>Stop Scraping:</b> Click the 'Stop' button to stop the scraping process.</li>"
+            "<li><b>Single Data View:</b> Enter a single domain in the input box and click the start button to scrape data from that domain.</li>"
+            "<li><b>Export Results:</b> Use the 'Export as CSV' or 'Export as Excel' buttons to save the scraped data.</li>"
+            "</ol>"
+            "<h3>Additional Features:</h3>"
+            "<ul>"
+            "<li>The progress bar shows the scraping progress.</li>"
+            "<li>The elapsed time and estimated remaining time are displayed during the scraping process.</li>"
+            "<li>The table displays the scraped phone numbers and their corresponding countries.</li>"
+            "<li>Clear results by clicking the 'Clear' button.</li>"
+            "</ul>"
+            "<h3>Contact:</h3>"
+            "<p>If you have any questions or need further assistance, please contact support@example.com.</p>"
+        )
+        
+        help_dialog = QMessageBox(self)
+        help_dialog.setWindowTitle("Help/Documentation")
+        help_dialog.setText(help_text)
+        help_dialog.setStandardButtons(QMessageBox.Ok)
+        help_dialog.exec_()
+
 
     def resume_scraping(self):
         self.pause_event.clear()
